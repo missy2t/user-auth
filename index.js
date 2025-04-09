@@ -26,7 +26,7 @@ app.post('/api/auth/login', async (req, res) => {
     );
 
     if (user.length === 0) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ message: 'Invalid email or password!' });
     }
 
     // Generate JWT Token
