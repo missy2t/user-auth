@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
-const sequelize = require('../config/database');
+const sequelize = require('../config/database'); // Ensure this points to your Sequelize instance
+const authRoutes = require('../routes/authRoutes');
 
 const User = sequelize.define('User', {
     username: {
@@ -40,7 +41,18 @@ const User = sequelize.define('User', {
             isIn: [['user', 'admin']]
         }
     },
-    createdAt: {       //ADD these two
+    resetToken: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    resetTokenExpiry: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        validate: {
+            isDate: true,
+        },
+    },
+    createdAt: {
         type: DataTypes.DATE,
         allowNull: true
     },
@@ -68,8 +80,3 @@ User.prototype.comparePassword = async function (password) {
 };
 
 module.exports = User;
-
-
-
-
-
