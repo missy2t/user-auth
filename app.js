@@ -8,10 +8,13 @@ const protectedRoute = require('./routes/protectedRoute');
 const filterRoutes = require('./routes/filterRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const paymentRoutes = require('./routes/paymentRoutes'); // Add payment routes
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
+// CORS policy
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*'); // Allow all origins
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
@@ -82,6 +85,8 @@ console.log('Mounting /api/notifications routes');
 app.use('/api/notifications', notificationRoutes);
 console.log('Mounting /api/dashboard routes');
 app.use('/api/dashboard', dashboardRoutes);
+console.log('Mounting /api/payments routes');
+app.use('/api/payments', paymentRoutes);
 
 // Test route
 app.get('/api/test', (req, res) => {
