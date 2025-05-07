@@ -62,18 +62,31 @@ const User = sequelize.define('User', {
     }
 }, {
     hooks: {
+        beforeValidate: (user) => {
+            if (user.email) {
+                user.email = user.email.trim().toLowerCase();
+            }
+        },
         beforeCreate: async (user) => {
             if (user.password) {
+                console.log('Hashing password during registration:', user.password); // Debug log
                 user.password = await bcrypt.hash(user.password, 10);
+                console.log('Hashed password:', user.password); // Debug log
             }
         },
         beforeUpdate: async (user) => {
             if (user.password) {
+                console.log('Hashing password during update:', user.password); // Debug log
                 user.password = await bcrypt.hash(user.password, 10);
+                console.log('Hashed password:', user.password); // Debug log
             }
         }
     }
 });
+
+User.associate = (models) => {
+  User.hasMany(models.Notification, { foreignKey: 'user_id' });
+};
 
 User.prototype.comparePassword = async function (password) {
     return bcrypt.compare(password, this.password);

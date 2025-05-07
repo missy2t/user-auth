@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail'); // Use the utility function
+const Notification = require('../models/Notification'); // Import Notification model
 require('dotenv').config();
 
 // REGISTER USER
@@ -10,32 +11,43 @@ exports.register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    console.log('Registering user with email:', email); // Debug log
+
     // Validate input
     if (!username || !email || !password) {
+      console.error('Missing required fields'); // Debug log
       return res.status(400).json({ message: 'All fields are required' });
     }
 
     // Check if the user already exists
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
+      console.error('Email already exists:', email); // Debug log
       return res.status(400).json({ message: 'Email already exists' });
     }
 
-    // Hash the password and create the user
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Save user - password will be hashed automatically in beforeCreate
     const newUser = await User.create({
       username,
       email,
-      password: hashedPassword,
+      password, // raw password here
       role: 'user',
     });
 
-    // Generate a JWT token
+    console.log('User created successfully:', newUser.email); // Debug log
+
+    // Generate JWT token
     const token = jwt.sign(
       { id: newUser.id, username: newUser.username, email: newUser.email },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
+
+    // Send a notification to the user
+    await Notification.create({
+      user_id: newUser.id,
+      message: `Welcome, ${newUser.username}! Your account has been created successfully.`,
+    });
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -43,7 +55,7 @@ exports.register = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error('Error during registration:', error);
+    console.error('Error during registration:', error); // Debug log
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
@@ -53,16 +65,15 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
-    if (!email || !password) {
-      console.log('Missing email or password'); // Debug log
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
-
     console.log('Login attempt with email:', email); // Debug log
 
+    // Normalize email
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log('Normalized email:', normalizedEmail); // Debug log
+
     // Find the user by email
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { email: normalizedEmail } });
+    console.log('Database query result:', user); // Debug log
     if (!user) {
       console.log('User not found for email:', email); // Debug log
       return res.status(401).json({ message: 'Invalid email or password' });
@@ -186,10 +197,37 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+// UPLOAD MATERIAL
+exports.uploadMaterial = async (req, res) => {
+  try {
+    // Ensure the user is authenticated
+    const userId = req.user?.id; // Assuming `req.user` is populated by authentication middleware
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized. Please log in.' });
+    }
+
+    // Validate the uploaded file
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded.' });
+    }
+
+    // Save file details to the database or process as needed
+    const filePath = req.file.path; // Assuming `req.file.path` contains the file path
+    console.log(`File uploaded by user ${userId}: ${filePath}`);
+
+    // Respond with success
+    res.status(200).json({ message: 'File uploaded successfully.', file: req.file });
+  } catch (error) {
+    console.error('Error during file upload:', error);
+    res.status(500).json({ message: 'Internal server error.', error: error.message });
+  }
+};
+
 // Ensure only the correct functions are exported
 module.exports = {
   register: exports.register,
   login: exports.login,
   requestPasswordReset: exports.requestPasswordReset,
   resetPassword: exports.resetPassword,
+  uploadMaterial: exports.uploadMaterial, // Add the new function to exports
 };
