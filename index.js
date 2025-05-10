@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const paymentRoutes = require('./routes/paymentRoutes'); // Add payment routes
+const uploadRoutes = require('./routes/uploadRoutes');
 const sequelize = require('./config/database'); // Use Sequelize instance
 const bodyParser = require('body-parser');
 const app = require('./app'); // Ensure app is imported correctly
@@ -24,6 +25,8 @@ console.log('Mounting /api/auth routes');
 app.use('/api/auth', authRoutes);
 console.log('Mounting /api/payments routes');
 app.use('/api/payments', paymentRoutes);
+console.log('Mounting /api/upload routes');
+app.use('/api/uploads/', uploadRoutes);
 
 // Test route
 app.get('/api/test', (req, res) => {
