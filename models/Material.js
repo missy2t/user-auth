@@ -25,6 +25,14 @@ const Material = sequelize.define('Material', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  department: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  year: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
 });
 
 module.exports = Material;
